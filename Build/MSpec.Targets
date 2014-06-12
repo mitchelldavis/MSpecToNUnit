@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+	<!--
+		This target file can be used to run all Machine Specification tests
+		within a project.  It defines the RunMSpecTests target.
+
+		You can import this file into a project like this:
+
+			<Import Project="..\Build\MSpec.Targets" />
+			<Target Name="AfterBuild" DependsOnTargets="RunMSpecTests" />
+
+		This makes sure the target is imported and available, but the tests will not
+		run unless the RunTests property is set to true.  You can set the property by either
+		passing it to the msbuild command line:
+
+			msbuild /P:RunTests=true
+
+		or by setting a property within the project file itself.
+
+			<PropertyGroup>
+				...
+				<RunTests>true</RunTests>
+				...
+			</PropertyGroup>
+	-->
+	<PropertyGroup>
+		<!--
+			The RunMSpecTests target is dependent on the Machine.Specifications nuget package.
+		-->
+		<MSpecExecutable Condition=" '$(Platform)' == 'x86' ">$(MSBuildThisDirectory)..\packages\Machine.Specifications.0.8.2\tools\mspec-x86-clr4.exe</MSpecExecutable>
+		<MSpecExecutable Condition=" '$(MSpecExecutable)' == '' ">$(MSBuildThisDirectory)..\packages\Machine.Specifications.0.8.2\tools\mspec-clr4.exe</MSpecExecutable>
+		<TestAssembly Condition=" '$(OutputType)' == 'Library' ">$(MSBuildProjectDirectory)\$(OutputPath)$(AssemblyName).dll</TestAssembly>
+		<TestAssembly Condition=" '$(OutputType)' == 'Exe' ">$(MSBuildProjectDirectory)\$(OutputPath)$(AssemblyName).exe</TestAssembly>
+		<RunTests Condition=" '$(RunTests)' == '' ">false</RunTests>
+		<ResultsDirectory Condition=" '$(ResultsDirectory)' == '' ">$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\TestResults))</ResultsDirectory>
+	</PropertyGroup>
+
+	<Target Name="CreateResultsDirectory" Condition="!Exists($(ResultsDirectory))">
+		<MakeDir Directories="$(ResultsDirectory)" />
+	</Target>
+
+	<Target Name="RunMSpecTests" Condition=" '$(RunTests)' == 'true' " DependsOnTargets="CreateResultsDirectory">
+		<ItemGroup>
+			<MSpecExecutable Include="&quot;$(MSpecExecutable)&quot;"/>
+			<MSpecExecutable Include="--xml &quot;$([System.IO.Path]::GetFullPath($(ResultsDirectory)\$(AssemblyName).MSpec.xml))&quot;"/>
+			<MSpecExecutable Include="&quot;$(TestAssembly)&quot;"/>
+		</ItemGroup>
+
+		<Message Text="Running MSpec Tests on $(TestAssembly)" />
+
+		<Exec Command="@(MSpecExecutable, ' ')" IgnoreExitCode="true" />
+	</Target>
+
+	<Target Name="TransformMSpecResults" Condition=" '$(RunTests)' == 'true' ">
+		<ItemGroup>
+			<MSpecResults Include="$(ResultsDirectory)\*.MSpec.xml"/>
+			<MSpecToNUnitXslt Include="$(MSBuildThisFileDirectory)MSpecToNUnit.xslt"/>
+		</ItemGroup>
+
+		<XslTransformation
+			OutputPaths="@(MSpecResults -> '$(ResultsDirectory)\%(FileName).NUnit.xml')"
+			XmlInputPaths="@(MSpecResults)"
+			XslInputPath="%(MSpecToNUnitXslt.Identity)" />
+	</Target>
+
+</Project>

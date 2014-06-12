@@ -1,0 +1,7 @@
+packages/
+TestResults/
+*.swp
+bin/
+obj/
+
+*.exe

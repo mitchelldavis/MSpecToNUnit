@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+	<Target Name="ValidateMSpecOutput">
+
+		<ItemGroup>
+			<XmlFilesToValidate Include="$(MSBuildThisFileDirectory)..\TestResults\*.NUnit.xml"/>
+			<Schema Include="$(MSBuildThisFileDirectory)NUnit.Results.xsd"/>
+		</ItemGroup>
+
+		<MSBuild.ExtensionPack.Xml.XmlTask TaskAction="Validate" XmlFile="@(XmlFilesToValidate)" SchemaFiles="@(Schema)"> 
+            <Output PropertyName="Validated" TaskParameter="IsValid"/> 
+        </MSBuild.ExtensionPack.Xml.XmlTask> 
+
+        <Error Text="Valid File: $(Validated)" Condition=" '$(Validated)' == 'false' " />
+	</Target>
+
+	<UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\packages\MSBuild.Extension.Pack.1.4.0\tools\net40\MSBuild.ExtensionPack.dll" TaskName="MSBuild.ExtensionPack.Xml.XmlTask"/>
+</Project>
