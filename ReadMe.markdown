@@ -1,1 +1,1 @@
-A simple project used to test [Machine Specification](https://github.com/machine/machine.specifications) test output to [NUnit](nunit.org) test output.
+A simple project used to convert [Machine Specification](https://github.com/machine/machine.specifications) test output to [NUnit](nunit.org) test output.
